@@ -20,23 +20,6 @@
 
 #include <ctime>
 
-#if defined(EZX_Z6) || defined (EZX_V8)
-	#define KEYCODE_0                              EZX_KEY_0
-	#define KEYCODE_2                              EZX_KEY_2
-	#define KEYCODE_4                              EZX_KEY_4
-	#define KEYCODE_6                              EZX_KEY_6
-	#define KEYCODE_8                              EZX_KEY_8
-	#define KEYCODE_UP                             EZX_KEY_UP
-	#define KEYCODE_DOWN                           EZX_KEY_DOWN
-	#define KEYCODE_LEFT                           EZX_KEY_LEFT
-	#define KEYCODE_RIGHT                          EZX_KEY_RIGHT
-	#define KEYCODE_CLEAR                          EZX_KEY_CLEAR
-	#ifdef EZX_V8
-	#define MAINDISPLAY_HEADER                     TINY_TYPE
-	#define TypeOK                                 just_ok
-	#endif
-#endif
-
 #if defined(EZX_EM30) || defined (EZX_E8)
 const int TILE_SIZE = 40;
 const int FIELD_OFFSET_SCALE = 5;
@@ -45,6 +28,16 @@ const int TILE_SIZE = 48;
 const int FIELD_OFFSET_SCALE = 32;
 #endif
 const int TILE_MARGIN = 5;
+
+#if !defined(EZX_E2)
+#define ICON_ABOUT_NAME "icon_usr.png"
+#define ICON_ABOUT_SIZE 48
+#define TARGET_PLATFORM "MotoMAGX"
+#else
+#define ICON_ABOUT_NAME "ezx_dia_50x50.png"
+#define ICON_ABOUT_SIZE 50
+#define TARGET_PLATFORM "EZX"
+#endif
 
 class Widget : public QWidget {
 	Q_OBJECT
@@ -211,12 +204,13 @@ class MainWidget : public ZKbMainWidget {
 public slots:
 	void about() {
 		ZMessageDlg *msgDlg = new ZMessageDlg("About 2048", QTextCodec::codecForName("UTF-8")->toUnicode(
-			"2048 Game implementation especially for MotoMAGX platform.\n\nVersion: 1.0, %1\nThanks to: Boxa, fill.sa, "
-			"VINRARUS\n© EXL (exl@bk.ru), 2020\nSource code: https://github.com/EXL/2048").arg(__DATE__),
+			"2048 Game implementation especially for %1 platform.\n\n"
+			"Version: 1.0, %2\nThanks to: Boxa, fill.sa, VINRARUS, Unreal_man\n"
+			"© EXL (exl@bk.ru), 2020\nSource code: https://github.com/EXL/2048").arg(TARGET_PLATFORM).arg(__DATE__),
 			ZMessageDlg::TypeOK, 60*1000);
-		QString iconPath = QString("%1/icon_usr.png").arg(QFileInfo(qApp->argv()[0]).dirPath(true));
+		QString iconPath = QString("%1/%2").arg(QFileInfo(qApp->argv()[0]).dirPath(true)).arg(ICON_ABOUT_NAME);
 		if (QFile::exists(iconPath)) {
-			QPixmap icon(48, 48);
+			QPixmap icon(ICON_ABOUT_SIZE, ICON_ABOUT_SIZE);
 			icon.load(iconPath);
 			msgDlg->setTitleIcon(icon);
 		}
@@ -241,9 +235,11 @@ public:
 		menu->insertItem("About", NULL, this, SLOT(about()), true, false, false, 6, 6);
 		menu->insertItem(tr("TXT_RID_SOFTKEY_EXIT", "Exit"), NULL, qApp, SLOT(quit()), true, false, false, 7, 7);
 		softKeys->setOptMenu(ZSoftKey::LEFT, menu);
+#if !defined(EZX_E2)
 		softKeys->setTextForOptMenuHide(tr("TXT_RID_SOFTKEY_OPTIONS", "Options"));
 #if !defined(EZX_EMU) && !defined(MOTODEV_STUDIO)
 		softKeys->setTextForOptMenuShow(tr("TXT_RID_SOFTKEY_SELECT", "Select"), tr("TXT_RID_SOFTKEY_CANCEL", "Cancel"));
+#endif
 #endif
 		softKeys->setText(ZSoftKey::LEFT, tr("TXT_RID_SOFTKEY_OPTIONS", "Options"));
 		softKeys->setText(ZSoftKey::RIGHT, tr("TXT_RID_SOFTKEY_EXIT", "Exit"));
@@ -260,4 +256,8 @@ int main(int argc, char *argv[]) {
 	return application.exec();
 }
 
+#if !defined(EZX_E2)
 #include "2048-MotoMAGX.moc"
+#else
+#include "2048-EZX_E2.moc"
+#endif
